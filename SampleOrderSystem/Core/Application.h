@@ -4,6 +4,9 @@
 #include "../Sample/SampleRepository.h"
 #include "../Sample/SampleModel.h"
 #include "../Sample/SampleView.h"
+#include "../Order/OrderRepository.h"
+#include "../Order/OrderModel.h"
+#include "../Order/OrderView.h"
 
 // 프로그램의 메인 루프. 메인 메뉴를 출력하고 사용자의 선택을 Router로 위임한다.
 class Application {
@@ -18,6 +21,10 @@ private:
     SampleRepository sampleRepository_;
     SampleModel sampleModel_;
     SampleView sampleView_;
+
+    OrderRepository orderRepository_;
+    OrderModel orderModel_;
+    OrderView orderView_;
 
     void showMainMenu() const;
 };

@@ -155,6 +155,11 @@
     <ClInclude Include="Sample\SampleModel.h" />
     <ClInclude Include="Sample\SampleView.h" />
     <ClInclude Include="Sample\SampleController.h" />
+    <ClInclude Include="Order\Order.h" />
+    <ClInclude Include="Order\OrderRepository.h" />
+    <ClInclude Include="Order\OrderModel.h" />
+    <ClInclude Include="Order\OrderView.h" />
+    <ClInclude Include="Order\OrderController.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Core\Router.cpp" />
@@ -165,9 +170,14 @@
     <ClCompile Include="Sample\SampleModel.cpp" />
     <ClCompile Include="Sample\SampleView.cpp" />
     <ClCompile Include="Sample\SampleController.cpp" />
+    <ClCompile Include="Order\OrderRepository.cpp" />
+    <ClCompile Include="Order\OrderModel.cpp" />
+    <ClCompile Include="Order\OrderView.cpp" />
+    <ClCompile Include="Order\OrderController.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="data\samples.json" />
+    <None Include="data\orders.json" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
