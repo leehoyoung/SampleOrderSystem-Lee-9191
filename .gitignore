@@ -1,0 +1,25 @@
+# Visual Studio
+.vs/
+*.user
+*.suo
+*.sdf
+*.opendb
+ipch/
+
+# Build outputs
+x64/
+x86/
+Win32/
+ARM/
+ARM64/
+Debug/
+Release/
+*.obj
+*.exe
+*.pdb
+*.ilk
+*.exp
+*.lib
+
+# 과제 원본 문서 (회사 자료, public repo에는 미포함 — 내용은 PRD.md로 이관)
+Project_Requirement.pdf
