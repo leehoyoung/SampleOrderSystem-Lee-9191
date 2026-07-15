@@ -6,6 +6,7 @@
 #include <algorithm>
 #include <cctype>
 #include <iomanip>
+#include <stdexcept>
 
 SampleRepository::SampleRepository(std::string filePath) : filePath_(std::move(filePath)) {}
 
@@ -90,4 +91,15 @@ std::string SampleRepository::nextId() const {
     std::ostringstream oss;
     oss << prefix << std::setfill('0') << std::setw(3) << next;
     return oss.str();
+}
+
+void SampleRepository::applyStockDelta(const std::string& sampleId, int delta) {
+    for (auto& sample : samples_) {
+        if (sample.id == sampleId) {
+            sample.stock += delta;
+            save();
+            return;
+        }
+    }
+    throw std::out_of_range("해당 ID의 시료를 찾을 수 없습니다: " + sampleId);
 }

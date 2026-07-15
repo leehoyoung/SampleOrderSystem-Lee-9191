@@ -29,7 +29,7 @@ SampleOrderSystem/
 │   ├── Core/                   # Router/Application/IModel/IView/IController
 │   ├── Json/                   # JsonValue 파서/직렬화
 │   ├── Sample/                 # 시료 관리 — 등록/목록/검색 동작
-│   ├── Order/                  # 주문 도메인 — 접수/예약(PRD 7.3) 완료, 승인/거절(7.4)은 진행 중
+│   ├── Order/                  # 주문 도메인 — 접수/예약(PRD 7.3), 승인/거절(7.4) 완료
 │   ├── Monitoring/              # 모니터링 스켈레톤 (전부 스텁)
 │   └── data/                    # samples.json / orders.json
 ├── SampleOrderSystemTests/     # GTest+gmock, 포팅 코드에 대한 사후 검증 테스트
@@ -107,4 +107,5 @@ x64\Debug\SampleOrderSystemTests.exe
 - [x] SampleOrderSystemTests(GTest+gmock) 프로젝트 구성
 - [x] 포팅된 Core/Json/Sample/Order 코드에 대한 사후 검증(characterization) 테스트 28개 추가
 - [x] PRD 7.3(시료 주문 접수/예약) TDD 구현 완료 — `docs/tasks/order-intake.md`
-- [ ] 기능 구현 (TDD) — PRD 7.4(주문 승인/거절, 진행 중)·7.5(모니터링 집계)·7.6(생산 라인)·7.7(출고)
+- [x] PRD 7.4(주문 승인/거절) TDD 구현 완료 — `docs/tasks/order-approval.md`
+- [ ] 기능 구현 (TDD) — PRD 7.5(모니터링 집계)·7.6(생산 라인)·7.7(출고)

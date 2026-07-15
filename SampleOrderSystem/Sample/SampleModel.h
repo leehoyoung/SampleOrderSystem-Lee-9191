@@ -12,6 +12,7 @@ public:
     explicit SampleModel(SampleRepository& repository);
 
     std::string addSample(const Sample& sample);
+    void decreaseStock(const std::string& sampleId, int quantity);
     std::vector<Sample> getAll() const;
     std::vector<Sample> findByName(const std::string& keyword) const;
 

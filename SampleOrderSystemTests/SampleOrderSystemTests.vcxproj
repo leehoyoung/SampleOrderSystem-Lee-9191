@@ -144,6 +144,7 @@
     <ClCompile Include="OrderRepositoryTest.cpp" />
     <ClCompile Include="OrderModelTest.cpp" />
     <ClCompile Include="OrderControllerTest.cpp" />
+    <ClCompile Include="OrderViewTest.cpp" />
     <ClCompile Include="..\SampleOrderSystem\Core\Router.cpp" />
     <ClCompile Include="..\SampleOrderSystem\Json\JsonValue.cpp" />
     <ClCompile Include="..\SampleOrderSystem\Sample\SampleRepository.cpp" />
@@ -151,6 +152,7 @@
     <ClCompile Include="..\SampleOrderSystem\Order\OrderRepository.cpp" />
     <ClCompile Include="..\SampleOrderSystem\Order\OrderModel.cpp" />
     <ClCompile Include="..\SampleOrderSystem\Order\OrderController.cpp" />
+    <ClCompile Include="..\SampleOrderSystem\Order\OrderView.cpp" />
     <ClCompile Include="..\packages\gmock.1.11.0\lib\native\src\gmock\src\gmock_main.cc" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

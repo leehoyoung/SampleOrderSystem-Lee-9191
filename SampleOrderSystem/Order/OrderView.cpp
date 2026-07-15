@@ -6,7 +6,7 @@
 
 void OrderView::showMenu() const {
     std::cout << "\n----------------------------------------\n"
-              << "[1] 주문 접수  [2] 접수된 주문 목록  [0] 뒤로가기\n"
+              << "[1] 주문 접수  [2] 접수된 주문 목록  [3] 주문 승인  [4] 주문 거절  [0] 뒤로가기\n"
               << "선택 > ";
 }
 
@@ -43,6 +43,13 @@ int OrderView::promptQuantity() const {
     } catch (const std::exception&) {
         return 0;
     }
+}
+
+std::string OrderView::promptOrderNo() const {
+    std::cout << "주문번호 > ";
+    std::string orderNo;
+    std::getline(std::cin, orderNo);
+    return StringUtil::trim(orderNo);
 }
 
 void OrderView::showOrderList(const std::vector<Order>& orders) const {
