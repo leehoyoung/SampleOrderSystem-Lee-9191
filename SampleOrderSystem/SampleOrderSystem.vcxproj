@@ -149,11 +149,13 @@
     <ClInclude Include="Core\Router.h" />
     <ClInclude Include="Core\StringUtil.h" />
     <ClInclude Include="Core\Application.h" />
+    <ClInclude Include="Json\JsonValue.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Core\Router.cpp" />
     <ClCompile Include="Core\Application.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="Json\JsonValue.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
