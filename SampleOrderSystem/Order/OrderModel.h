@@ -15,6 +15,12 @@
 // createOrder는 PRD 5.1(등록된 시료만 주문 가능)과 접수 단계 수량 검증(quantity <= 0
 // 거부, 사용자 확정 사항)을 만족해야 한다 — 시료 조회를 위해 SampleModel을 참조한다.
 // 검증 실패 시 std::invalid_argument를 던진다 (스텁 단계에서는 아직 미구현).
+//
+// 예외 계약: 이 클래스의 public 메서드는 실패 시 항상 std::invalid_argument만 던진다.
+// OrderRepository::updateStatus / SampleRepository::applyStockDelta는 내부적으로
+// std::out_of_range를 던질 수 있지만, OrderModel은 그 호출 전에 항상 자체 사전
+// 검증(주문 존재/상태, 시료 존재 등)으로 우회하여 std::out_of_range가 호출자에게
+// 노출되지 않도록 한다. 향후 새 public 메서드를 추가할 때도 이 계약을 유지해야 한다.
 class OrderModel : public IModel {
 public:
     OrderModel(OrderRepository& repository, SampleModel& sampleModel);
@@ -40,4 +46,9 @@ private:
     SampleModel& sampleModel_;
 
     static std::string todayYyyymmdd();
+
+    // rejectOrder/approveOrder가 공유하는 "RESERVED 주문 조회" 검증을 한 곳에 모은다.
+    // 존재하지 않거나 RESERVED가 아니면 std::invalid_argument를 던진다.
+    const Order& findReservedOrderOrThrow(const std::vector<Order>& orders, const std::string& orderNo,
+        const std::string& wrongStatusMessage) const;
 };

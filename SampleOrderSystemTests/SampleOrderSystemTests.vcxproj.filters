@@ -37,6 +37,9 @@
     <ClCompile Include="OrderControllerTest.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
+    <ClCompile Include="OrderViewTest.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
     <ClCompile Include="..\SampleOrderSystem\Core\Router.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
@@ -56,6 +59,9 @@
       <Filter>소스 파일</Filter>
     </ClCompile>
     <ClCompile Include="..\SampleOrderSystem\Order\OrderController.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="..\SampleOrderSystem\Order\OrderView.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
   </ItemGroup>
