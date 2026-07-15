@@ -46,6 +46,8 @@ public:
         shownOrders = orders;
     }
 
+    std::string promptOrderNo() const override { return orderNoToReturn; }
+
     // 호출 기록/큐 — 테스트에서 자유롭게 설정/검증한다.
     mutable int showMenuCallCount = 0;
     std::vector<std::string> menuChoiceQueue;
@@ -55,6 +57,7 @@ public:
     std::string sampleIdToReturn;
     std::string customerNameToReturn;
     int quantityToReturn = 0;
+    std::string orderNoToReturn;
 
     mutable int showOrderListCallCount = 0;
     mutable std::vector<Order> shownOrders;
@@ -155,23 +158,29 @@ TEST_F(OrderControllerTest, ReceivingOrderWithUnknownSampleIdShowsFailureMessage
     EXPECT_FALSE(view.messages.empty());
 }
 
-// 태스크 8: 접수된 주문 목록 조회 메뉴는 현재까지 생성된 모든 주문을 표시한다.
-TEST_F(OrderControllerTest, ListingOrdersShowsAllCreatedOrders) {
+// 태스크 17 [확정]: 접수된 주문 목록 조회 메뉴는 RESERVED 상태 주문만 표시한다
+// (기존 태스크 8 "전체 표시" 요구사항은 이번 기능으로 좁혀 대체되었다).
+TEST_F(OrderControllerTest, ListingOrdersShowsOnlyReservedOrders) {
     SampleRepository sampleRepo(kSampleTestFilePath);
     sampleRepo.load();
     SampleModel sampleModel(sampleRepo);
     Sample sample;
     sample.name = "시료1";
-    std::string sampleId1 = sampleModel.addSample(sample);
-    std::string sampleId2 = sampleModel.addSample(sample);
-    std::string sampleId3 = sampleModel.addSample(sample);
+    sample.stock = 100;
+    std::string sampleId = sampleModel.addSample(sample);
 
     OrderRepository orderRepo(kOrderTestFilePath);
     orderRepo.load();
     OrderModel orderModel(orderRepo, sampleModel);
-    orderModel.createOrder(sampleId1, "고객사A", 10);
-    orderModel.createOrder(sampleId2, "고객사B", 20);
-    orderModel.createOrder(sampleId3, "고객사C", 30);
+
+    orderModel.createOrder(sampleId, "고객사A", 10);  // RESERVED
+    orderModel.createOrder(sampleId, "고객사B", 20);  // RESERVED
+
+    const std::string confirmedOrderNo = orderModel.createOrder(sampleId, "고객사C", 5);
+    orderModel.approveOrder(confirmedOrderNo);  // 재고 충분 -> CONFIRMED
+
+    const std::string rejectedOrderNo = orderModel.createOrder(sampleId, "고객사D", 1);
+    orderModel.rejectOrder(rejectedOrderNo);  // REJECTED
 
     FakeOrderView view;
     view.menuChoiceQueue = {"2", "0"};
@@ -179,21 +188,32 @@ TEST_F(OrderControllerTest, ListingOrdersShowsAllCreatedOrders) {
     OrderController controller(view, orderModel);
     controller.execute();
 
-    EXPECT_EQ(view.shownOrders.size(), orderModel.getAll().size());
-    ASSERT_EQ(view.shownOrders.size(), 3u);
+    ASSERT_EQ(view.shownOrders.size(), 2u);
+    for (const auto& order : view.shownOrders) {
+        EXPECT_EQ(order.status, OrderStatus::Reserved);
+    }
 }
 
-// 태스크 9 [경계]: 주문이 하나도 없는 상태에서 목록 조회 시 빈 목록임을 알 수
-// 있는 결과를 보여준다 (크래시/예외 없이 빈 상태 표시).
-TEST_F(OrderControllerTest, ListingOrdersWithNoOrdersShowsEmptyListWithoutCrash) {
+// 태스크 18 [경계]: RESERVED 주문이 하나도 없을 때(전부 CONFIRMED/REJECTED) 목록
+// 조회는 크래시/예외 없이 빈 상태를 표시한다.
+TEST_F(OrderControllerTest, ListingOrdersWithNoReservedOrdersShowsEmptyListWithoutCrash) {
     SampleRepository sampleRepo(kSampleTestFilePath);
     sampleRepo.load();
     SampleModel sampleModel(sampleRepo);
+    Sample sample;
+    sample.name = "시료1";
+    sample.stock = 100;
+    std::string sampleId = sampleModel.addSample(sample);
 
     OrderRepository orderRepo(kOrderTestFilePath);
     orderRepo.load();
     OrderModel orderModel(orderRepo, sampleModel);
-    ASSERT_EQ(orderModel.getAll().size(), 0u);
+
+    const std::string confirmedOrderNo = orderModel.createOrder(sampleId, "고객사A", 5);
+    orderModel.approveOrder(confirmedOrderNo);  // CONFIRMED
+
+    const std::string rejectedOrderNo = orderModel.createOrder(sampleId, "고객사B", 1);
+    orderModel.rejectOrder(rejectedOrderNo);  // REJECTED
 
     FakeOrderView view;
     view.menuChoiceQueue = {"2", "0"};
@@ -246,4 +266,179 @@ TEST_F(OrderControllerTest, SelectingUndefinedChoiceShowsErrorAndRedisplaysMenu)
     EXPECT_FALSE(view.messages.empty());
     EXPECT_GE(view.showMenuCallCount, 2);
     EXPECT_EQ(view.menuChoiceQueueIndex, 2u);
+}
+
+// 태스크 19: "주문 승인" 메뉴에서 주문번호를 입력하면 재고가 충분한 경우 즉시
+// CONFIRMED로 전이되고, 화면에 CONFIRMED임을 알 수 있는 완료 메시지가 표시된다.
+TEST_F(OrderControllerTest, ApprovingOrderWithSufficientStockShowsConfirmedMessage) {
+    SampleRepository sampleRepo(kSampleTestFilePath);
+    sampleRepo.load();
+    SampleModel sampleModel(sampleRepo);
+    Sample sample;
+    sample.name = "시료1";
+    sample.stock = 30;
+    std::string sampleId = sampleModel.addSample(sample);
+    ASSERT_EQ(sampleId, "S-001");
+
+    OrderRepository orderRepo(kOrderTestFilePath);
+    orderRepo.load();
+    OrderModel orderModel(orderRepo, sampleModel);
+    const std::string orderNo = orderModel.createOrder(sampleId, "ACME", 10);
+
+    FakeOrderView view;
+    view.menuChoiceQueue = {"3", "0"};
+    view.orderNoToReturn = orderNo;
+
+    OrderController controller(view, orderModel);
+    controller.execute();
+
+    std::vector<Order> all = orderModel.getAll();
+    ASSERT_EQ(all.size(), 1u);
+    EXPECT_EQ(all[0].status, OrderStatus::Confirmed);
+
+    bool confirmedMessageShown = std::any_of(view.messages.begin(), view.messages.end(),
+        [](const std::string& message) { return message.find("CONFIRMED") != std::string::npos; });
+    EXPECT_TRUE(confirmedMessageShown);
+}
+
+// 태스크 20: 재고 부족으로 PRODUCING으로 전이된 경우, 화면에 PRODUCING임을 알 수
+// 있는 메시지가 표시된다 (CONFIRMED 메시지와 구분되어야 한다).
+TEST_F(OrderControllerTest, ApprovingOrderWithInsufficientStockShowsProducingMessage) {
+    SampleRepository sampleRepo(kSampleTestFilePath);
+    sampleRepo.load();
+    SampleModel sampleModel(sampleRepo);
+    Sample sample;
+    sample.name = "시료1";
+    sample.stock = 5;
+    std::string sampleId = sampleModel.addSample(sample);
+    ASSERT_EQ(sampleId, "S-001");
+
+    OrderRepository orderRepo(kOrderTestFilePath);
+    orderRepo.load();
+    OrderModel orderModel(orderRepo, sampleModel);
+    const std::string orderNo = orderModel.createOrder(sampleId, "ACME", 20);
+
+    FakeOrderView view;
+    view.menuChoiceQueue = {"3", "0"};
+    view.orderNoToReturn = orderNo;
+
+    OrderController controller(view, orderModel);
+    controller.execute();
+
+    std::vector<Order> all = orderModel.getAll();
+    ASSERT_EQ(all.size(), 1u);
+    EXPECT_EQ(all[0].status, OrderStatus::Producing);
+
+    bool producingMessageShown = std::any_of(view.messages.begin(), view.messages.end(),
+        [](const std::string& message) { return message.find("PRODUCING") != std::string::npos; });
+    EXPECT_TRUE(producingMessageShown);
+
+    bool confirmedMessageShown = std::any_of(view.messages.begin(), view.messages.end(),
+        [](const std::string& message) { return message.find("CONFIRMED") != std::string::npos; });
+    EXPECT_FALSE(confirmedMessageShown);
+}
+
+// 태스크 21: "주문 거절" 메뉴에서 주문번호를 입력하면 거절 처리 후 완료 메시지가
+// 표시된다.
+TEST_F(OrderControllerTest, RejectingOrderShowsRejectedMessage) {
+    SampleRepository sampleRepo(kSampleTestFilePath);
+    sampleRepo.load();
+    SampleModel sampleModel(sampleRepo);
+    Sample sample;
+    sample.name = "시료1";
+    sample.stock = 30;
+    std::string sampleId = sampleModel.addSample(sample);
+
+    OrderRepository orderRepo(kOrderTestFilePath);
+    orderRepo.load();
+    OrderModel orderModel(orderRepo, sampleModel);
+    const std::string orderNo = orderModel.createOrder(sampleId, "ACME", 10);
+
+    FakeOrderView view;
+    view.menuChoiceQueue = {"4", "0"};
+    view.orderNoToReturn = orderNo;
+
+    OrderController controller(view, orderModel);
+    controller.execute();
+
+    std::vector<Order> all = orderModel.getAll();
+    ASSERT_EQ(all.size(), 1u);
+    EXPECT_EQ(all[0].status, OrderStatus::Rejected);
+
+    bool rejectedMessageShown = std::any_of(view.messages.begin(), view.messages.end(),
+        [](const std::string& message) { return message.find("REJECTED") != std::string::npos; });
+    EXPECT_TRUE(rejectedMessageShown);
+}
+
+// 태스크 22 [경계]: "주문 승인" 메뉴에서 존재하지 않는 주문번호를 입력하면 실패
+// 메시지가 표시되고 메뉴로 복귀한다 (프로그램이 종료되지 않는다).
+TEST_F(OrderControllerTest, ApprovingUnknownOrderNoShowsFailureMessageAndRedisplaysMenu) {
+    SampleRepository sampleRepo(kSampleTestFilePath);
+    sampleRepo.load();
+    SampleModel sampleModel(sampleRepo);
+
+    OrderRepository orderRepo(kOrderTestFilePath);
+    orderRepo.load();
+    OrderModel orderModel(orderRepo, sampleModel);
+
+    FakeOrderView view;
+    view.menuChoiceQueue = {"3", "0"};
+    view.orderNoToReturn = "ORD-NOPE";
+
+    OrderController controller(view, orderModel);
+    controller.execute();
+
+    EXPECT_FALSE(view.messages.empty());
+    EXPECT_GE(view.showMenuCallCount, 2);
+}
+
+// 태스크 22 회귀: "주문 거절" 메뉴에서도 존재하지 않는 주문번호 입력 시 동일하게
+// 실패 메시지가 표시된다.
+TEST_F(OrderControllerTest, RejectingUnknownOrderNoShowsFailureMessage) {
+    SampleRepository sampleRepo(kSampleTestFilePath);
+    sampleRepo.load();
+    SampleModel sampleModel(sampleRepo);
+
+    OrderRepository orderRepo(kOrderTestFilePath);
+    orderRepo.load();
+    OrderModel orderModel(orderRepo, sampleModel);
+
+    FakeOrderView view;
+    view.menuChoiceQueue = {"4", "0"};
+    view.orderNoToReturn = "ORD-NOPE";
+
+    OrderController controller(view, orderModel);
+    controller.execute();
+
+    EXPECT_FALSE(view.messages.empty());
+}
+
+// 태스크 23 [경계]: 이미 CONFIRMED 처리된 주문번호를 "주문 거절" 메뉴에 입력하면
+// 실패 메시지가 표시되고 해당 주문 상태는 CONFIRMED로 유지된다.
+TEST_F(OrderControllerTest, RejectingAlreadyConfirmedOrderShowsFailureMessageAndKeepsStatus) {
+    SampleRepository sampleRepo(kSampleTestFilePath);
+    sampleRepo.load();
+    SampleModel sampleModel(sampleRepo);
+    Sample sample;
+    sample.name = "시료1";
+    sample.stock = 30;
+    std::string sampleId = sampleModel.addSample(sample);
+
+    OrderRepository orderRepo(kOrderTestFilePath);
+    orderRepo.load();
+    OrderModel orderModel(orderRepo, sampleModel);
+    const std::string orderNo = orderModel.createOrder(sampleId, "ACME", 10);
+    orderModel.approveOrder(orderNo);  // 재고 충분 -> CONFIRMED
+
+    FakeOrderView view;
+    view.menuChoiceQueue = {"4", "0"};
+    view.orderNoToReturn = orderNo;
+
+    OrderController controller(view, orderModel);
+    controller.execute();
+
+    std::vector<Order> all = orderModel.getAll();
+    ASSERT_EQ(all.size(), 1u);
+    EXPECT_EQ(all[0].status, OrderStatus::Confirmed);
+    EXPECT_FALSE(view.messages.empty());
 }

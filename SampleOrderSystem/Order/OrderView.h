@@ -18,4 +18,6 @@ public:
     int promptQuantity() const override;
 
     void showOrderList(const std::vector<Order>& orders) const override;
+
+    std::string promptOrderNo() const override;
 };

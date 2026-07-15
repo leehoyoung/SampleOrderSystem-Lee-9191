@@ -17,4 +17,6 @@ private:
 
     void receiveOrder();
     void listOrders();
+    void approveOrderFlow();
+    void rejectOrderFlow();
 };

@@ -20,4 +20,8 @@ public:
     virtual int promptQuantity() const = 0;
 
     virtual void showOrderList(const std::vector<Order>& orders) const = 0;
+
+    // 승인/거절 메뉴에서 대상 주문번호를 직접 입력받는다 (사용자 확정 사항 —
+    // docs/tasks/order-approval.md).
+    virtual std::string promptOrderNo() const = 0;
 };

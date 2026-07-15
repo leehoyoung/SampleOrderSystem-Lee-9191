@@ -45,6 +45,13 @@ int OrderView::promptQuantity() const {
     }
 }
 
+std::string OrderView::promptOrderNo() const {
+    std::cout << "주문번호 > ";
+    std::string orderNo;
+    std::getline(std::cin, orderNo);
+    return StringUtil::trim(orderNo);
+}
+
 void OrderView::showOrderList(const std::vector<Order>& orders) const {
     if (orders.empty()) {
         std::cout << "접수된 주문이 없습니다.\n";
