@@ -9,12 +9,12 @@
 
 Application::Application()
     : sampleRepository_("data/samples.json"), sampleModel_(sampleRepository_),
-      orderRepository_("data/orders.json"), orderModel_(orderRepository_),
+      orderRepository_("data/orders.json"), orderModel_(orderRepository_, sampleModel_),
       monitorModel_(sampleModel_, orderModel_) {
     sampleRepository_.load();
     orderRepository_.load();
     router_.registerController("1", std::make_shared<SampleController>(sampleModel_, sampleView_));
-    router_.registerController("2", std::make_shared<OrderController>());
+    router_.registerController("2", std::make_shared<OrderController>(orderView_, orderModel_));
     router_.registerController("3", std::make_shared<MonitorController>());
 }
 

@@ -158,6 +158,7 @@
     <ClInclude Include="Order\Order.h" />
     <ClInclude Include="Order\OrderRepository.h" />
     <ClInclude Include="Order\OrderModel.h" />
+    <ClInclude Include="Order\IOrderView.h" />
     <ClInclude Include="Order\OrderView.h" />
     <ClInclude Include="Order\OrderController.h" />
     <ClInclude Include="Monitoring\MonitorModel.h" />
