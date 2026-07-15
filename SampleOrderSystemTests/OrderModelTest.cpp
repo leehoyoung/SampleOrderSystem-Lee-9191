@@ -5,19 +5,24 @@
 #include <filesystem>
 #include "../SampleOrderSystem/Order/OrderModel.h"
 #include "../SampleOrderSystem/Order/OrderRepository.h"
+#include "../SampleOrderSystem/Sample/SampleModel.h"
+#include "../SampleOrderSystem/Sample/SampleRepository.h"
 
 namespace {
 const char* kTestFilePath = "test_data/order_model_test.json";
+const char* kSampleTestFilePath = "test_data/order_model_test_samples.json";
 }
 
 class OrderModelTest : public ::testing::Test {
 protected:
     void SetUp() override {
         std::filesystem::remove(kTestFilePath);
+        std::filesystem::remove(kSampleTestFilePath);
     }
 
     void TearDown() override {
         std::filesystem::remove(kTestFilePath);
+        std::filesystem::remove(kSampleTestFilePath);
     }
 };
 
@@ -35,6 +40,34 @@ TEST_F(OrderModelTest, CreateOrderAlwaysStartsAsReservedWithNextOrderNoFormat) {
     EXPECT_EQ(created.status, OrderStatus::Reserved);
     EXPECT_EQ(orderNo.rfind("ORD-", 0), 0u);
     EXPECT_NE(orderNo.find("-0001"), std::string::npos);
+}
+
+TEST_F(OrderModelTest, CreateOrderDoesNotChangeSampleStock) {
+    SampleRepository sampleRepo(kSampleTestFilePath);
+    sampleRepo.load();
+    SampleModel sampleModel(sampleRepo);
+
+    Sample sample;
+    sample.name = "시료1";
+    sample.stock = 30;
+    std::string sampleId = sampleModel.addSample(sample);
+    ASSERT_EQ(sampleId, "S-001");
+
+    OrderRepository orderRepo(kTestFilePath);
+    orderRepo.load();
+    OrderModel orderModel(orderRepo);
+
+    std::string orderNo = orderModel.createOrder(sampleId, "고객사", 10);
+
+    std::vector<Order> all = orderModel.getAll();
+    ASSERT_EQ(all.size(), 1u);
+    EXPECT_EQ(all[0].status, OrderStatus::Reserved);
+    EXPECT_EQ(all[0].orderNo, orderNo);
+
+    std::vector<Sample> samplesAfter = sampleModel.getAll();
+    ASSERT_EQ(samplesAfter.size(), 1u);
+    EXPECT_EQ(samplesAfter[0].id, "S-001");
+    EXPECT_EQ(samplesAfter[0].stock, 30);
 }
 
 TEST_F(OrderModelTest, GetAllReturnsAllCreatedOrders) {
