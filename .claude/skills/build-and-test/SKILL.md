@@ -12,6 +12,9 @@ description: Use whenever you need to build the SampleOrderSystem C++ solution o
   `gtest_main`을 링크한다. 이렇게 하면 GTest 자체의 `--gtest_filter` 등 플래그를 바로
   쓸 수 있어, Visual Studio의 Google Test 어댑터 확장 설치 여부와 무관하게 CLI에서
   빠르게 반복 실행할 수 있다.
+- gmock은 NuGet 패키지로 이미 설치되어 있으며, 테스트 프로젝트에서 함께 링크한다.
+  단 `cpp-tdd` skill 기준대로 mock 사용은 외부 경계(예: 생산 라인의 `Clock`
+  추상화)로 한정한다.
 
 ## 경로 (이 머신 기준 — 바뀌면 여기만 수정)
 
