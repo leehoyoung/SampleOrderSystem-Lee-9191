@@ -2,9 +2,13 @@
 
 #include <iostream>
 
+#include "../Sample/SampleController.h"
 #include "StringUtil.h"
 
-Application::Application() {
+Application::Application()
+    : sampleRepository_("data/samples.json"), sampleModel_(sampleRepository_) {
+    sampleRepository_.load();
+    router_.registerController("1", std::make_shared<SampleController>(sampleModel_, sampleView_));
 }
 
 void Application::run() {
@@ -28,6 +32,7 @@ void Application::showMainMenu() const {
     std::cout << "\n==========================================\n"
               << " 반도체 시료 생산주문관리 시스템\n"
               << "==========================================\n"
+              << "[1] 시료 관리\n"
               << "[0] 종료\n\n"
               << "선택 > ";
 }

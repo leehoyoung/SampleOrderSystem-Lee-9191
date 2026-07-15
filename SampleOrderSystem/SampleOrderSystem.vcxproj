@@ -150,12 +150,24 @@
     <ClInclude Include="Core\StringUtil.h" />
     <ClInclude Include="Core\Application.h" />
     <ClInclude Include="Json\JsonValue.h" />
+    <ClInclude Include="Sample\Sample.h" />
+    <ClInclude Include="Sample\SampleRepository.h" />
+    <ClInclude Include="Sample\SampleModel.h" />
+    <ClInclude Include="Sample\SampleView.h" />
+    <ClInclude Include="Sample\SampleController.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Core\Router.cpp" />
     <ClCompile Include="Core\Application.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Json\JsonValue.cpp" />
+    <ClCompile Include="Sample\SampleRepository.cpp" />
+    <ClCompile Include="Sample\SampleModel.cpp" />
+    <ClCompile Include="Sample\SampleView.cpp" />
+    <ClCompile Include="Sample\SampleController.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="data\samples.json" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
