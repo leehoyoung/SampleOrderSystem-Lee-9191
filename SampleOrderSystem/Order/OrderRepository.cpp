@@ -6,6 +6,7 @@
 #include <algorithm>
 #include <cctype>
 #include <iomanip>
+#include <stdexcept>
 
 OrderRepository::OrderRepository(std::string filePath) : filePath_(std::move(filePath)) {}
 
@@ -92,4 +93,15 @@ std::string OrderRepository::nextOrderNo(const std::string& yyyymmdd) const {
     std::ostringstream oss;
     oss << prefix << yyyymmdd << "-" << std::setfill('0') << std::setw(4) << next;
     return oss.str();
+}
+
+void OrderRepository::updateStatus(const std::string& orderNo, OrderStatus status) {
+    for (auto& order : orders_) {
+        if (order.orderNo == orderNo) {
+            order.status = status;
+            save();
+            return;
+        }
+    }
+    throw std::out_of_range("해당 주문번호를 찾을 수 없습니다: " + orderNo);
 }

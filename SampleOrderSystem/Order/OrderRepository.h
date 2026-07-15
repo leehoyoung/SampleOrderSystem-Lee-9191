@@ -19,6 +19,10 @@ public:
     // NNNN은 날짜와 무관하게 파일 전체에서 전역으로 증가한다.
     std::string nextOrderNo(const std::string& yyyymmdd) const;
 
+    // 지정한 주문번호의 상태를 변경하고 즉시 파일에 반영한다.
+    // 해당 주문번호가 없으면 std::out_of_range를 던진다.
+    void updateStatus(const std::string& orderNo, OrderStatus status);
+
 private:
     std::string filePath_;
     std::vector<Order> orders_;

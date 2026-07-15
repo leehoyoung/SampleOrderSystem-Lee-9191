@@ -3,6 +3,7 @@
 
 #include <gtest/gtest.h>
 #include <filesystem>
+#include <stdexcept>
 #include "../SampleOrderSystem/Order/OrderRepository.h"
 
 namespace {
@@ -66,4 +67,37 @@ TEST_F(OrderRepositoryTest, NextOrderNoContinuesGloballyRegardlessOfDate) {
     repo.append(existing);
 
     EXPECT_EQ(repo.nextOrderNo("20260416"), "ORD-20260416-0008");
+}
+
+// 태스크 3 [기반]: 기존 주문의 상태를 갱신하는 메서드가 상태를 바꾸고 영속화한다.
+TEST_F(OrderRepositoryTest, UpdateStatusChangesStatusOfExistingOrder) {
+    OrderRepository repo(kTestFilePath);
+    repo.load();
+
+    Order order;
+    order.orderNo = "ORD-20260101-0001";
+    order.sampleId = "S-001";
+    order.customerName = "고객사";
+    order.quantity = 5;
+    order.status = OrderStatus::Reserved;
+    repo.append(order);
+
+    repo.updateStatus("ORD-20260101-0001", OrderStatus::Rejected);
+
+    ASSERT_EQ(repo.listAll().size(), 1u);
+    EXPECT_EQ(repo.listAll()[0].status, OrderStatus::Rejected);
+    EXPECT_EQ(repo.listAll()[0].sampleId, "S-001");
+    EXPECT_EQ(repo.listAll()[0].customerName, "고객사");
+    EXPECT_EQ(repo.listAll()[0].quantity, 5);
+}
+
+// 태스크 4 [기반, 경계]: 존재하지 않는 주문번호로 상태 갱신을 시도하면 실패하고,
+// 목록에 아무 변화가 없다.
+TEST_F(OrderRepositoryTest, UpdateStatusThrowsWhenOrderNoNotFound) {
+    OrderRepository repo(kTestFilePath);
+    repo.load();
+
+    EXPECT_THROW(repo.updateStatus("ORD-NOPE", OrderStatus::Rejected), std::out_of_range);
+
+    EXPECT_TRUE(repo.listAll().empty());
 }

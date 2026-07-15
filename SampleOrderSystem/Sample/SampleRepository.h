@@ -19,6 +19,10 @@ public:
     // 기존 데이터의 "S-" 접두 뒤 숫자 중 최댓값 다음 번호로 새 ID를 만든다.
     std::string nextId() const;
 
+    // 지정한 시료의 재고를 delta만큼 변경하고 즉시 파일에 반영한다.
+    // 해당 ID의 시료가 없으면 std::out_of_range를 던진다.
+    void applyStockDelta(const std::string& sampleId, int delta);
+
 private:
     std::string filePath_;
     std::vector<Sample> samples_;

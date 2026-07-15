@@ -21,6 +21,10 @@ std::string SampleModel::addSample(const Sample& sample) {
     return stored.id;
 }
 
+void SampleModel::decreaseStock(const std::string& sampleId, int quantity) {
+    repository_.applyStockDelta(sampleId, -quantity);
+}
+
 std::vector<Sample> SampleModel::getAll() const {
     return repository_.listAll();
 }
