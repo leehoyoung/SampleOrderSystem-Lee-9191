@@ -23,3 +23,6 @@ Release/
 
 # 과제 원본 문서 (회사 자료, public repo에는 미포함 — 내용은 PRD.md로 이관)
 Project_Requirement.pdf
+
+# NuGet (packages.config만 추적, 실제 바이너리는 nuget restore로 복원)
+packages/
