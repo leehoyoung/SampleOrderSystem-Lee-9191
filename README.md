@@ -22,13 +22,14 @@ SampleOrderSystem/
 ├── CLAUDE.md                  # 개발 규칙 (빌드, Clean Code, 커밋, 에스컬레이션 기준)
 ├── docs/
 │   ├── specs/                  # 스캐폴딩/포팅 설계 근거 문서
+│   ├── tasks/                   # spec-writer가 작성한 기능별 TDD 태스크 목록
 │   └── reviews/                # 서브에이전트 구현·리뷰 기록 (CLAUDE.md 4-1장)
 ├── SampleOrderSystem.slnx
 ├── SampleOrderSystem/          # 메인 애플리케이션 프로젝트 (MVC)
 │   ├── Core/                   # Router/Application/IModel/IView/IController
 │   ├── Json/                   # JsonValue 파서/직렬화
 │   ├── Sample/                 # 시료 관리 — 등록/목록/검색 동작
-│   ├── Order/                  # 주문 도메인 — Controller는 스텁(승인/거절은 이후 TDD)
+│   ├── Order/                  # 주문 도메인 — 접수/예약(PRD 7.3) 완료, 승인/거절(7.4)은 진행 중
 │   ├── Monitoring/              # 모니터링 스켈레톤 (전부 스텁)
 │   └── data/                    # samples.json / orders.json
 ├── SampleOrderSystemTests/     # GTest+gmock, 포팅 코드에 대한 사후 검증 테스트
@@ -40,27 +41,27 @@ SampleOrderSystem/
 ## 개발 프로세스 (Agentic Engineering)
 
 이 프로젝트는 Claude Code 서브에이전트 + 스킬로 TDD 개발 파이프라인을 구성한다.
+리뷰/검증/승인은 태스크 단위가 아니라 **PR(기능 브랜치) 단위**가 기본이다 —
+태스크 하나마다 반복하면 오버헤드가 커서, 기능 전체가 끝난 뒤 한 번에 검증한다.
 
 ```
-spec-writer          PRD.md 기능 → 단일 행동 단위 TDD 태스크 목록을
-                       docs/tasks/<기능-슬러그>.md 로 저장
+spec-writer        PRD.md 기능 → TDD 태스크 목록 (docs/tasks/<기능-슬러그>.md)
    ↓
-사용자 리뷰/승인       ← 승인 전에는 test-writer가 시작하지 않음
+사용자 승인
    ↓
-test-writer (RED)     테스트 1개 + 트리비얼 스텁 작성, GTest FAILED 확인
+(배치 반복) ──────────────────────────────
+  test-writer(RED) → implementer(GREEN) → 태스크 단위 로컬 커밋
+──────────────────────────────────────────
+   ↓  (PR 전체 완료 후 1회)
+requirements-auditor → cpp-code-reviewer
+   ↓  (문제 발견 시 test-writer/implementer 재작업 → 재검증 반복)
+컨트롤러 직접 빌드/테스트 재검증
    ↓
-implementer (GREEN)   스텁 본문에 최소 로직 채움, 전체 테스트 GREEN 확인
-   ↓
-requirements-auditor   PRD.md 요구사항과 구현이 실제로 일치하는지 추적/감사
-   ↓
-cpp-code-reviewer      Clean Code 리뷰 + 리팩터링 요청 라우팅
-   ↓
-사용자 리뷰/승인 → 커밋
+사용자 승인 (PR 단위) → 병합/PR
 ```
 
-각 역할의 상세 정의는 `.claude/agents/`, 공유 절차(RED/GREEN 정의, 빌드/테스트
-명령어, 커밋 워크플로우)는 `.claude/skills/`에 있다. 자세한 내용은 `CLAUDE.md`를
-참고한다.
+각 역할의 상세 정의는 `.claude/agents/`, 공유 절차는 `.claude/skills/`와
+`CLAUDE.md` 4/4-1/6장에 있다.
 
 ## 빌드 및 실행
 
@@ -105,4 +106,5 @@ x64\Debug\SampleOrderSystemTests.exe
 - [x] 모니터링/더미 데이터 도구 검토 반영 (DataMonitor는 렌더링 스타일만 Monitoring/ 폴더로 흡수, DummyDataGenerator는 독립 도구로 유지)
 - [x] SampleOrderSystemTests(GTest+gmock) 프로젝트 구성
 - [x] 포팅된 Core/Json/Sample/Order 코드에 대한 사후 검증(characterization) 테스트 28개 추가
-- [ ] 기능 구현 (TDD) — PRD 7.3(주문 승인/거절)·7.5(모니터링 집계)·7.6(생산 라인)·7.7(출고)
+- [x] PRD 7.3(시료 주문 접수/예약) TDD 구현 완료 — `docs/tasks/order-intake.md`
+- [ ] 기능 구현 (TDD) — PRD 7.4(주문 승인/거절, 진행 중)·7.5(모니터링 집계)·7.6(생산 라인)·7.7(출고)
