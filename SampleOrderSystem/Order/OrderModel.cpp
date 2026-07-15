@@ -1,10 +1,24 @@
 #include "OrderModel.h"
 
+#include <algorithm>
 #include <ctime>
+#include <stdexcept>
+#include <vector>
 
-OrderModel::OrderModel(OrderRepository& repository) : repository_(repository) {}
+OrderModel::OrderModel(OrderRepository& repository, SampleModel& sampleModel)
+    : repository_(repository), sampleModel_(sampleModel) {}
 
 std::string OrderModel::createOrder(const std::string& sampleId, const std::string& customerName, int quantity) {
+    std::vector<Sample> samples = sampleModel_.getAll();
+    bool sampleRegistered = std::any_of(samples.begin(), samples.end(),
+        [&sampleId](const Sample& sample) { return sample.id == sampleId; });
+    if (!sampleRegistered) {
+        throw std::invalid_argument("등록되지 않은 시료 ID입니다: " + sampleId);
+    }
+    if (quantity <= 0) {
+        throw std::invalid_argument("quantity는 0보다 커야 합니다.");
+    }
+
     Order order;
     order.orderNo = repository_.nextOrderNo(todayYyyymmdd());
     order.sampleId = sampleId;

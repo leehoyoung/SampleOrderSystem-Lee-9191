@@ -1,11 +1,20 @@
 #pragma once
 
 #include "../Core/IController.h"
+#include "IOrderView.h"
+#include "OrderModel.h"
 
-// 주문 관리 기능의 확장 지점.
-// 실제 로직(예약/승인/거절)은 PRD 7.3/7.4 착수 시 Sample 기능과 동일한
-// Model/View/Controller 패턴으로 채워 넣는다.
+// 주문 관리 기능(주문 접수/목록 조회/뒤로가기)의 메뉴 흐름을 조율한다.
+// 실제 분기 로직은 PRD 7.3 착수 시 채워진다 — 지금은 트리비얼 스텁.
 class OrderController : public IController {
 public:
+    OrderController(IOrderView& view, OrderModel& model);
     void execute() override;
+
+private:
+    IOrderView& view_;
+    OrderModel& model_;
+
+    void receiveOrder();
+    void listOrders();
 };
