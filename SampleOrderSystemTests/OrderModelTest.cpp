@@ -268,3 +268,275 @@ TEST_F(OrderModelTest, RejectOrderThrowsWhenOrderNotReserved) {
     ASSERT_EQ(all.size(), 1u);
     EXPECT_EQ(all[0].status, OrderStatus::Confirmed);
 }
+
+// order-approval 태스크 8: 재고가 주문 수량보다 충분히 많으면 즉시 CONFIRMED로
+// 전이하고 그만큼 재고를 차감한다.
+TEST_F(OrderModelTest, ApproveOrderConfirmsAndDecreasesStockWhenStockSufficient) {
+    SampleRepository sampleRepo(kSampleTestFilePath);
+    sampleRepo.load();
+    SampleModel sampleModel(sampleRepo);
+    Sample sample;
+    sample.name = "시료1";
+    sample.stock = 30;
+    std::string sampleId = sampleModel.addSample(sample);
+    ASSERT_EQ(sampleId, "S-001");
+
+    OrderRepository orderRepo(kTestFilePath);
+    orderRepo.load();
+    OrderModel orderModel(orderRepo, sampleModel);
+
+    std::string orderNo = orderModel.createOrder(sampleId, "ACME", 10);
+
+    orderModel.approveOrder(orderNo);
+
+    std::vector<Order> all = orderModel.getAll();
+    ASSERT_EQ(all.size(), 1u);
+    EXPECT_EQ(all[0].status, OrderStatus::Confirmed);
+
+    std::vector<Sample> samplesAfter = sampleModel.getAll();
+    ASSERT_EQ(samplesAfter.size(), 1u);
+    EXPECT_EQ(samplesAfter[0].stock, 20);
+}
+
+// order-approval 태스크 9 [확정]: 재고와 주문 수량이 정확히 일치해도 "충분"으로
+// 처리되어 즉시 CONFIRMED + 재고 0으로 차감된다.
+TEST_F(OrderModelTest, ApproveOrderConfirmsAndZeroesStockWhenStockExactlyMatchesQuantity) {
+    SampleRepository sampleRepo(kSampleTestFilePath);
+    sampleRepo.load();
+    SampleModel sampleModel(sampleRepo);
+    Sample sample;
+    sample.name = "시료1";
+    sample.stock = 10;
+    std::string sampleId = sampleModel.addSample(sample);
+    ASSERT_EQ(sampleId, "S-001");
+
+    OrderRepository orderRepo(kTestFilePath);
+    orderRepo.load();
+    OrderModel orderModel(orderRepo, sampleModel);
+
+    std::string orderNo = orderModel.createOrder(sampleId, "ACME", 10);
+
+    orderModel.approveOrder(orderNo);
+
+    std::vector<Order> all = orderModel.getAll();
+    ASSERT_EQ(all.size(), 1u);
+    EXPECT_EQ(all[0].status, OrderStatus::Confirmed);
+
+    std::vector<Sample> samplesAfter = sampleModel.getAll();
+    ASSERT_EQ(samplesAfter.size(), 1u);
+    EXPECT_EQ(samplesAfter[0].stock, 0);
+}
+
+// order-approval 태스크 10: 재고가 주문 수량보다 부족하면 PRODUCING으로 전이하고
+// 재고를 변경하지 않는다.
+TEST_F(OrderModelTest, ApproveOrderMovesToProducingWithoutChangingStockWhenStockInsufficient) {
+    SampleRepository sampleRepo(kSampleTestFilePath);
+    sampleRepo.load();
+    SampleModel sampleModel(sampleRepo);
+    Sample sample;
+    sample.name = "시료1";
+    sample.stock = 30;
+    std::string sampleId = sampleModel.addSample(sample);
+    ASSERT_EQ(sampleId, "S-001");
+
+    OrderRepository orderRepo(kTestFilePath);
+    orderRepo.load();
+    OrderModel orderModel(orderRepo, sampleModel);
+
+    std::string orderNo = orderModel.createOrder(sampleId, "ACME", 50);
+
+    orderModel.approveOrder(orderNo);
+
+    std::vector<Order> all = orderModel.getAll();
+    ASSERT_EQ(all.size(), 1u);
+    EXPECT_EQ(all[0].status, OrderStatus::Producing);
+
+    std::vector<Sample> samplesAfter = sampleModel.getAll();
+    ASSERT_EQ(samplesAfter.size(), 1u);
+    EXPECT_EQ(samplesAfter[0].stock, 30);
+}
+
+// order-approval 태스크 11 [경계]: 재고 0인 시료에 대한 승인도 PRODUCING으로
+// 처리되며 재고는 0 그대로 유지된다.
+TEST_F(OrderModelTest, ApproveOrderMovesToProducingWhenStockIsZero) {
+    SampleRepository sampleRepo(kSampleTestFilePath);
+    sampleRepo.load();
+    SampleModel sampleModel(sampleRepo);
+    Sample sample;
+    sample.name = "시료1";
+    sample.stock = 0;
+    std::string sampleId = sampleModel.addSample(sample);
+    ASSERT_EQ(sampleId, "S-001");
+
+    OrderRepository orderRepo(kTestFilePath);
+    orderRepo.load();
+    OrderModel orderModel(orderRepo, sampleModel);
+
+    std::string orderNo = orderModel.createOrder(sampleId, "ACME", 5);
+
+    orderModel.approveOrder(orderNo);
+
+    std::vector<Order> all = orderModel.getAll();
+    ASSERT_EQ(all.size(), 1u);
+    EXPECT_EQ(all[0].status, OrderStatus::Producing);
+
+    std::vector<Sample> samplesAfter = sampleModel.getAll();
+    ASSERT_EQ(samplesAfter.size(), 1u);
+    EXPECT_EQ(samplesAfter[0].stock, 0);
+}
+
+// order-approval 태스크 12 [핵심 도메인 규칙]: 동일 시료에 이미 PRODUCING 상태인
+// 주문이 존재하면, 재고 필드 값이 신규 주문 수량 이상이어도 신규 승인은 무조건
+// PRODUCING으로 분류되고 재고는 변경되지 않는다.
+TEST_F(OrderModelTest, ApproveOrderStaysProducingWhenSameSampleHasExistingProducingOrder) {
+    SampleRepository sampleRepo(kSampleTestFilePath);
+    sampleRepo.load();
+    SampleModel sampleModel(sampleRepo);
+    Sample sample;
+    sample.name = "시료1";
+    sample.stock = 30;
+    std::string sampleId = sampleModel.addSample(sample);
+    ASSERT_EQ(sampleId, "S-001");
+
+    OrderRepository orderRepo(kTestFilePath);
+    orderRepo.load();
+    OrderModel orderModel(orderRepo, sampleModel);
+
+    std::string firstOrderNo = orderModel.createOrder(sampleId, "ACME", 50);
+    orderModel.approveOrder(firstOrderNo);
+    ASSERT_EQ(orderModel.getAll()[0].status, OrderStatus::Producing);
+
+    std::string secondOrderNo = orderModel.createOrder(sampleId, "ACME2", 10);
+    orderModel.approveOrder(secondOrderNo);
+
+    std::vector<Order> all = orderModel.getAll();
+    ASSERT_EQ(all.size(), 2u);
+    auto it = std::find_if(all.begin(), all.end(),
+        [&secondOrderNo](const Order& order) { return order.orderNo == secondOrderNo; });
+    ASSERT_NE(it, all.end());
+    EXPECT_EQ(it->status, OrderStatus::Producing);
+
+    std::vector<Sample> samplesAfter = sampleModel.getAll();
+    ASSERT_EQ(samplesAfter.size(), 1u);
+    EXPECT_EQ(samplesAfter[0].stock, 30);
+}
+
+// order-approval 태스크 13 [경계]: 동일 시료에 PRODUCING 주문이 있어도 다른
+// 시료의 승인 판정에는 영향을 주지 않는다.
+TEST_F(OrderModelTest, ApproveOrderConfirmsUnaffectedByProducingOrderOfDifferentSample) {
+    SampleRepository sampleRepo(kSampleTestFilePath);
+    sampleRepo.load();
+    SampleModel sampleModel(sampleRepo);
+    Sample sample1;
+    sample1.name = "시료1";
+    sample1.stock = 30;
+    std::string sampleId1 = sampleModel.addSample(sample1);
+    ASSERT_EQ(sampleId1, "S-001");
+    Sample sample2;
+    sample2.name = "시료2";
+    sample2.stock = 20;
+    std::string sampleId2 = sampleModel.addSample(sample2);
+    ASSERT_EQ(sampleId2, "S-002");
+
+    OrderRepository orderRepo(kTestFilePath);
+    orderRepo.load();
+    OrderModel orderModel(orderRepo, sampleModel);
+
+    std::string producingOrderNo = orderModel.createOrder(sampleId1, "ACME", 50);
+    orderModel.approveOrder(producingOrderNo);
+    ASSERT_EQ(orderModel.getAll()[0].status, OrderStatus::Producing);
+
+    std::string targetOrderNo = orderModel.createOrder(sampleId2, "ACME2", 5);
+    orderModel.approveOrder(targetOrderNo);
+
+    std::vector<Order> all = orderModel.getAll();
+    auto it = std::find_if(all.begin(), all.end(),
+        [&targetOrderNo](const Order& order) { return order.orderNo == targetOrderNo; });
+    ASSERT_NE(it, all.end());
+    EXPECT_EQ(it->status, OrderStatus::Confirmed);
+
+    std::vector<Sample> samplesAfter = sampleModel.getAll();
+    ASSERT_EQ(samplesAfter.size(), 2u);
+    auto sampleIt = std::find_if(samplesAfter.begin(), samplesAfter.end(),
+        [&sampleId2](const Sample& sample) { return sample.id == sampleId2; });
+    ASSERT_NE(sampleIt, samplesAfter.end());
+    EXPECT_EQ(sampleIt->stock, 15);
+
+    auto sample1It = std::find_if(samplesAfter.begin(), samplesAfter.end(),
+        [&sampleId1](const Sample& sample) { return sample.id == sampleId1; });
+    ASSERT_NE(sample1It, samplesAfter.end());
+    EXPECT_EQ(sample1It->stock, 30);
+}
+
+// order-approval 태스크 14 [경계]: 존재하지 않는 주문번호로 승인을 시도하면 실패한다.
+TEST_F(OrderModelTest, ApproveOrderThrowsWhenOrderNoNotFound) {
+    SampleRepository sampleRepo(kSampleTestFilePath);
+    sampleRepo.load();
+    SampleModel sampleModel(sampleRepo);
+
+    OrderRepository orderRepo(kTestFilePath);
+    orderRepo.load();
+    OrderModel orderModel(orderRepo, sampleModel);
+
+    EXPECT_THROW(orderModel.approveOrder("ORD-NOPE"), std::invalid_argument);
+    EXPECT_EQ(orderModel.getAll().size(), 0u);
+}
+
+// order-approval 태스크 15 [경계]: RESERVED가 아닌 주문(이미 처리됨)을 승인하려
+// 하면 실패한다.
+TEST_F(OrderModelTest, ApproveOrderThrowsWhenOrderNotReserved) {
+    SampleRepository sampleRepo(kSampleTestFilePath);
+    sampleRepo.load();
+    SampleModel sampleModel(sampleRepo);
+    Sample sample;
+    sample.name = "시료1";
+    sample.stock = 30;
+    std::string sampleId = sampleModel.addSample(sample);
+    ASSERT_EQ(sampleId, "S-001");
+
+    OrderRepository orderRepo(kTestFilePath);
+    orderRepo.load();
+    OrderModel orderModel(orderRepo, sampleModel);
+
+    std::string orderNo = orderModel.createOrder(sampleId, "ACME", 10);
+    orderRepo.updateStatus(orderNo, OrderStatus::Rejected);
+
+    EXPECT_THROW(orderModel.approveOrder(orderNo), std::invalid_argument);
+
+    std::vector<Order> all = orderModel.getAll();
+    ASSERT_EQ(all.size(), 1u);
+    EXPECT_EQ(all[0].status, OrderStatus::Rejected);
+
+    std::vector<Sample> samplesAfter = sampleModel.getAll();
+    ASSERT_EQ(samplesAfter.size(), 1u);
+    EXPECT_EQ(samplesAfter[0].stock, 30);
+}
+
+// order-approval 태스크 16 [경계, 방어적]: 승인 대상 주문의 sampleId가 더 이상
+// 등록된 시료 목록에 없으면 실패한다.
+TEST_F(OrderModelTest, ApproveOrderThrowsWhenSampleNoLongerRegistered) {
+    SampleRepository sampleRepo(kSampleTestFilePath);
+    sampleRepo.load();
+    SampleModel sampleModel(sampleRepo);
+    ASSERT_EQ(sampleModel.getAll().size(), 0u);
+
+    OrderRepository orderRepo(kTestFilePath);
+    orderRepo.load();
+    OrderModel orderModel(orderRepo, sampleModel);
+
+    // createOrder를 거치지 않고 리포지토리에 직접 "주문은 있지만 시료는 없는"
+    // 상태를 만든다 (S-999는 sampleModel에 등록된 적이 없음).
+    Order orphanOrder;
+    orphanOrder.orderNo = "ORD-20260715-0001";
+    orphanOrder.sampleId = "S-999";
+    orphanOrder.customerName = "ACME";
+    orphanOrder.quantity = 10;
+    orphanOrder.status = OrderStatus::Reserved;
+    orderRepo.append(orphanOrder);
+
+    EXPECT_THROW(orderModel.approveOrder(orphanOrder.orderNo), std::invalid_argument);
+
+    std::vector<Order> all = orderModel.getAll();
+    ASSERT_EQ(all.size(), 1u);
+    EXPECT_EQ(all[0].status, OrderStatus::Reserved);
+}

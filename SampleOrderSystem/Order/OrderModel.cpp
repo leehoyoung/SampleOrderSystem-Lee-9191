@@ -48,6 +48,47 @@ void OrderModel::rejectOrder(const std::string& orderNo) {
     repository_.updateStatus(orderNo, OrderStatus::Rejected);
 }
 
+void OrderModel::approveOrder(const std::string& orderNo) {
+    const std::vector<Order>& orders = repository_.listAll();
+    auto it = std::find_if(orders.begin(), orders.end(),
+        [&orderNo](const Order& order) { return order.orderNo == orderNo; });
+    if (it == orders.end()) {
+        throw std::invalid_argument("존재하지 않는 주문번호입니다: " + orderNo);
+    }
+    if (it->status != OrderStatus::Reserved) {
+        throw std::invalid_argument("RESERVED 상태의 주문만 승인할 수 있습니다: " + orderNo);
+    }
+
+    const std::string sampleId = it->sampleId;
+    const int quantity = it->quantity;
+
+    std::vector<Sample> samples = sampleModel_.getAll();
+    auto sampleIt = std::find_if(samples.begin(), samples.end(),
+        [&sampleId](const Sample& sample) { return sample.id == sampleId; });
+    if (sampleIt == samples.end()) {
+        throw std::invalid_argument("등록되지 않은 시료 ID입니다: " + sampleId);
+    }
+    const int stock = sampleIt->stock;
+
+    bool sameSampleProducing = std::any_of(orders.begin(), orders.end(),
+        [&sampleId, &orderNo](const Order& order) {
+            return order.sampleId == sampleId && order.orderNo != orderNo &&
+                order.status == OrderStatus::Producing;
+        });
+
+    if (sameSampleProducing) {
+        repository_.updateStatus(orderNo, OrderStatus::Producing);
+        return;
+    }
+
+    if (stock >= quantity) {
+        repository_.updateStatus(orderNo, OrderStatus::Confirmed);
+        sampleModel_.decreaseStock(sampleId, quantity);
+    } else {
+        repository_.updateStatus(orderNo, OrderStatus::Producing);
+    }
+}
+
 std::string OrderModel::todayYyyymmdd() {
     std::time_t t = std::time(nullptr);
     std::tm tmBuf{};

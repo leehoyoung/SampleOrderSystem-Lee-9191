@@ -25,6 +25,16 @@ public:
     std::vector<Order> getAll() const;
     void rejectOrder(const std::string& orderNo);
 
+    // PRD 7.4: RESERVED 주문을 승인한다.
+    // - 시료가 등록되어 있지 않거나, 동일 sampleId의 다른 주문이 이미 PRODUCING
+    //   상태가 아니면서 재고가 quantity 이상이면 즉시 CONFIRMED로 전이하고 재고를
+    //   그만큼 차감한다.
+    // - 그렇지 않으면(재고 부족, 혹은 동일 sampleId에 이미 PRODUCING 주문 존재)
+    //   PRODUCING으로 전이하고 재고는 변경하지 않는다.
+    // - 대상 주문이 없거나 RESERVED 상태가 아니거나, sampleId가 더 이상 등록된
+    //   시료 목록에 없으면 std::invalid_argument를 던진다 (스텁 단계에서는 아직 미구현).
+    void approveOrder(const std::string& orderNo);
+
 private:
     OrderRepository& repository_;
     SampleModel& sampleModel_;
