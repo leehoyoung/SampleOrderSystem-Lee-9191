@@ -135,6 +135,20 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="SmokeTest.cpp" />
+    <ClCompile Include="JsonValueTest.cpp" />
+    <ClCompile Include="StringUtilTest.cpp" />
+    <ClCompile Include="RouterTest.cpp" />
+    <ClCompile Include="OrderTest.cpp" />
+    <ClCompile Include="SampleRepositoryTest.cpp" />
+    <ClCompile Include="SampleModelTest.cpp" />
+    <ClCompile Include="OrderRepositoryTest.cpp" />
+    <ClCompile Include="OrderModelTest.cpp" />
+    <ClCompile Include="..\SampleOrderSystem\Core\Router.cpp" />
+    <ClCompile Include="..\SampleOrderSystem\Json\JsonValue.cpp" />
+    <ClCompile Include="..\SampleOrderSystem\Sample\SampleRepository.cpp" />
+    <ClCompile Include="..\SampleOrderSystem\Sample\SampleModel.cpp" />
+    <ClCompile Include="..\SampleOrderSystem\Order\OrderRepository.cpp" />
+    <ClCompile Include="..\SampleOrderSystem\Order\OrderModel.cpp" />
     <ClCompile Include="..\packages\gmock.1.11.0\lib\native\src\gmock\src\gmock_main.cc" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
