@@ -71,8 +71,8 @@ cpp-code-reviewer      Clean Code 리뷰 + 리팩터링 요청 라우팅
 - [x] PRD.md / CLAUDE.md 작성
 - [x] Agentic Engineering 파이프라인(서브에이전트/스킬) 구성
 - [x] 빈 Visual Studio 프로젝트 스켈레톤
-- [ ] MVC 스켈레톤 반영 (ConsoleMVC PoC 완료 후)
-- [ ] 데이터 영속성 반영 (DataPersistence PoC 완료 후)
-- [ ] 데이터 모니터링 도구 반영 (DataMonitor PoC 완료 후)
-- [ ] 더미 데이터 생성 도구 반영 (DummyDataGenerator PoC 완료 후)
-- [ ] 기능 구현 (TDD)
+- [x] MVC 스켈레톤 반영 (Core/Sample/Order/Monitoring 폴더 구조, `docs/specs/poc-integration-design.md` 참고)
+- [x] 데이터 영속성 반영 (JsonValue + Repository 패턴, data/samples.json, data/orders.json)
+- [x] 모니터링/더미 데이터 도구 검토 반영 (DataMonitor는 렌더링 스타일만 Monitoring/ 폴더로 흡수, DummyDataGenerator는 독립 도구로 유지)
+- [x] SampleOrderSystemTests(GTest+gmock) 프로젝트 구성
+- [ ] 기능 구현 (TDD) — PRD 7.3(주문 승인/거절)·7.5(모니터링 집계)·7.6(생산 라인)·7.7(출고)
