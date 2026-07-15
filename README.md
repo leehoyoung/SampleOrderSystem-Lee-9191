@@ -62,9 +62,29 @@ cpp-code-reviewer      Clean Code 리뷰 + 리팩터링 요청 라우팅
 명령어, 커밋 워크플로우)는 `.claude/skills/`에 있다. 자세한 내용은 `CLAUDE.md`를
 참고한다.
 
-## 빌드 및 테스트
+## 빌드 및 실행
 
-정확한 빌드/테스트 명령어는 [`.claude/skills/build-and-test/SKILL.md`](./.claude/skills/build-and-test/SKILL.md)에 있다.
+빌드(레포 루트에서 실행):
+
+```
+"C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Current\Bin\MSBuild.exe" SampleOrderSystem.slnx /p:Configuration=Debug /p:Platform=x64
+```
+
+메인 애플리케이션 실행 (콘솔 메뉴 진입):
+
+```
+x64\Debug\SampleOrderSystem.exe
+```
+
+테스트 실행:
+
+```
+x64\Debug\SampleOrderSystemTests.exe
+```
+
+`x64\Debug\`는 빌드 산출물이라 `.gitignore` 처리되어 있으므로, 위 두 실행 파일은
+먼저 빌드해야 생성된다. MSBuild 경로가 이 머신과 다르거나 정확한 빌드/테스트
+명령어가 더 필요하면 [`.claude/skills/build-and-test/SKILL.md`](./.claude/skills/build-and-test/SKILL.md)를 참고한다.
 
 ## 관련 PoC
 
