@@ -201,3 +201,70 @@ TEST_F(OrderModelTest, CreateOrderRejectsNegativeQuantity) {
     EXPECT_THROW(orderModel.createOrder(sampleId, "ACME", -5), std::invalid_argument);
     EXPECT_EQ(orderModel.getAll().size(), 0u);
 }
+
+// order-approval 태스크 5: RESERVED 주문을 거절하면 REJECTED로 전이되고 재고는 그대로다.
+TEST_F(OrderModelTest, RejectOrderTransitionsReservedToRejectedWithoutChangingStock) {
+    SampleRepository sampleRepo(kSampleTestFilePath);
+    sampleRepo.load();
+    SampleModel sampleModel(sampleRepo);
+    Sample sample;
+    sample.name = "시료1";
+    sample.stock = 30;
+    std::string sampleId = sampleModel.addSample(sample);
+    ASSERT_EQ(sampleId, "S-001");
+
+    OrderRepository orderRepo(kTestFilePath);
+    orderRepo.load();
+    OrderModel orderModel(orderRepo, sampleModel);
+
+    std::string orderNo = orderModel.createOrder(sampleId, "ACME", 10);
+
+    orderModel.rejectOrder(orderNo);
+
+    std::vector<Order> all = orderModel.getAll();
+    ASSERT_EQ(all.size(), 1u);
+    EXPECT_EQ(all[0].status, OrderStatus::Rejected);
+
+    std::vector<Sample> samplesAfter = sampleModel.getAll();
+    ASSERT_EQ(samplesAfter.size(), 1u);
+    EXPECT_EQ(samplesAfter[0].stock, 30);
+}
+
+// order-approval 태스크 6 [경계]: 존재하지 않는 주문번호로 거절을 시도하면 실패한다.
+TEST_F(OrderModelTest, RejectOrderThrowsWhenOrderNoNotFound) {
+    SampleRepository sampleRepo(kSampleTestFilePath);
+    sampleRepo.load();
+    SampleModel sampleModel(sampleRepo);
+
+    OrderRepository orderRepo(kTestFilePath);
+    orderRepo.load();
+    OrderModel orderModel(orderRepo, sampleModel);
+
+    EXPECT_THROW(orderModel.rejectOrder("ORD-NOPE"), std::invalid_argument);
+    EXPECT_EQ(orderModel.getAll().size(), 0u);
+}
+
+// order-approval 태스크 7 [경계]: 이미 CONFIRMED 상태인 주문은 거절할 수 없다(이중 처리 방지).
+TEST_F(OrderModelTest, RejectOrderThrowsWhenOrderNotReserved) {
+    SampleRepository sampleRepo(kSampleTestFilePath);
+    sampleRepo.load();
+    SampleModel sampleModel(sampleRepo);
+    Sample sample;
+    sample.name = "시료1";
+    sample.stock = 30;
+    std::string sampleId = sampleModel.addSample(sample);
+    ASSERT_EQ(sampleId, "S-001");
+
+    OrderRepository orderRepo(kTestFilePath);
+    orderRepo.load();
+    OrderModel orderModel(orderRepo, sampleModel);
+
+    std::string orderNo = orderModel.createOrder(sampleId, "ACME", 10);
+    orderRepo.updateStatus(orderNo, OrderStatus::Confirmed);
+
+    EXPECT_THROW(orderModel.rejectOrder(orderNo), std::invalid_argument);
+
+    std::vector<Order> all = orderModel.getAll();
+    ASSERT_EQ(all.size(), 1u);
+    EXPECT_EQ(all[0].status, OrderStatus::Confirmed);
+}

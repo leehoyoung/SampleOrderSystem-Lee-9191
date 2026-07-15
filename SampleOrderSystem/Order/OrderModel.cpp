@@ -34,6 +34,20 @@ std::vector<Order> OrderModel::getAll() const {
     return repository_.listAll();
 }
 
+void OrderModel::rejectOrder(const std::string& orderNo) {
+    const std::vector<Order>& orders = repository_.listAll();
+    auto it = std::find_if(orders.begin(), orders.end(),
+        [&orderNo](const Order& order) { return order.orderNo == orderNo; });
+    if (it == orders.end()) {
+        throw std::invalid_argument("존재하지 않는 주문번호입니다: " + orderNo);
+    }
+    if (it->status != OrderStatus::Reserved) {
+        throw std::invalid_argument("RESERVED 상태의 주문만 거절할 수 있습니다: " + orderNo);
+    }
+
+    repository_.updateStatus(orderNo, OrderStatus::Rejected);
+}
+
 std::string OrderModel::todayYyyymmdd() {
     std::time_t t = std::time(nullptr);
     std::tm tmBuf{};

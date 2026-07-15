@@ -23,6 +23,7 @@ public:
     // 등록되지 않은 sampleId, 혹은 quantity <= 0이면 std::invalid_argument를 던진다.
     std::string createOrder(const std::string& sampleId, const std::string& customerName, int quantity);
     std::vector<Order> getAll() const;
+    void rejectOrder(const std::string& orderNo);
 
 private:
     OrderRepository& repository_;
