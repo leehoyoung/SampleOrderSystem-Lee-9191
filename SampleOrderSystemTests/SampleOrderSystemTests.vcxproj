@@ -21,8 +21,8 @@
   <PropertyGroup Label="Globals">
     <VCProjectVersion>18.0</VCProjectVersion>
     <Keyword>Win32Proj</Keyword>
-    <ProjectGuid>{4f436caf-0b98-41a5-bac7-db2137e134f6}</ProjectGuid>
-    <RootNamespace>SampleOrderSystem</RootNamespace>
+    <ProjectGuid>{8a1c9e2b-5d3f-4a6e-9b7c-1f2d3e4a5b6c}</ProjectGuid>
+    <RootNamespace>SampleOrderSystemTests</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
@@ -83,9 +83,6 @@
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
-    <Manifest>
-      <EnableSegmentHeap>true</EnableSegmentHeap>
-    </Manifest>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
@@ -102,9 +99,6 @@
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
-    <Manifest>
-      <EnableSegmentHeap>true</EnableSegmentHeap>
-    </Manifest>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
@@ -119,9 +113,6 @@
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
-    <Manifest>
-      <EnableSegmentHeap>true</EnableSegmentHeap>
-    </Manifest>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
@@ -138,54 +129,22 @@
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
-    <Manifest>
-      <EnableSegmentHeap>true</EnableSegmentHeap>
-    </Manifest>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="Core\IModel.h" />
-    <ClInclude Include="Core\IView.h" />
-    <ClInclude Include="Core\IController.h" />
-    <ClInclude Include="Core\Router.h" />
-    <ClInclude Include="Core\StringUtil.h" />
-    <ClInclude Include="Core\Application.h" />
-    <ClInclude Include="Json\JsonValue.h" />
-    <ClInclude Include="Sample\Sample.h" />
-    <ClInclude Include="Sample\SampleRepository.h" />
-    <ClInclude Include="Sample\SampleModel.h" />
-    <ClInclude Include="Sample\SampleView.h" />
-    <ClInclude Include="Sample\SampleController.h" />
-    <ClInclude Include="Order\Order.h" />
-    <ClInclude Include="Order\OrderRepository.h" />
-    <ClInclude Include="Order\OrderModel.h" />
-    <ClInclude Include="Order\OrderView.h" />
-    <ClInclude Include="Order\OrderController.h" />
-    <ClInclude Include="Monitoring\MonitorModel.h" />
-    <ClInclude Include="Monitoring\MonitorView.h" />
-    <ClInclude Include="Monitoring\MonitorController.h" />
+    <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Core\Router.cpp" />
-    <ClCompile Include="Core\Application.cpp" />
-    <ClCompile Include="main.cpp" />
-    <ClCompile Include="Json\JsonValue.cpp" />
-    <ClCompile Include="Sample\SampleRepository.cpp" />
-    <ClCompile Include="Sample\SampleModel.cpp" />
-    <ClCompile Include="Sample\SampleView.cpp" />
-    <ClCompile Include="Sample\SampleController.cpp" />
-    <ClCompile Include="Order\OrderRepository.cpp" />
-    <ClCompile Include="Order\OrderModel.cpp" />
-    <ClCompile Include="Order\OrderView.cpp" />
-    <ClCompile Include="Order\OrderController.cpp" />
-    <ClCompile Include="Monitoring\MonitorModel.cpp" />
-    <ClCompile Include="Monitoring\MonitorView.cpp" />
-    <ClCompile Include="Monitoring\MonitorController.cpp" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="data\samples.json" />
-    <None Include="data\orders.json" />
+    <ClCompile Include="SmokeTest.cpp" />
+    <ClCompile Include="..\packages\gmock.1.11.0\lib\native\src\gmock\src\gmock_main.cc" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
+    <Import Project="..\packages\gmock.1.11.0\build\native\gmock.targets" Condition="Exists('..\packages\gmock.1.11.0\build\native\gmock.targets')" />
   </ImportGroup>
+  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
+    <PropertyGroup>
+      <ErrorText>이 프로젝트는 이 컴퓨터에 없는 NuGet 패키지를 참조합니다. 해당 패키지를 다운로드하려면 NuGet 패키지 복원을 사용하십시오. 자세한 내용은 http://go.microsoft.com/fwlink/?LinkID=322105를 참조하십시오. 누락된 파일은 {0}입니다.</ErrorText>
+    </PropertyGroup>
+    <Error Condition="!Exists('..\packages\gmock.1.11.0\build\native\gmock.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\gmock.1.11.0\build\native\gmock.targets'))" />
+  </Target>
 </Project>
