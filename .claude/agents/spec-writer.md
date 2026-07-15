@@ -1,7 +1,7 @@
 ---
 name: spec-writer
-description: Use before starting implementation of any feature area from PRD.md. Breaks a feature down into an ordered list of single-behavior TDD tasks that test-writer and implementer will execute one at a time. Read-only — never edits production or test code.
-tools: Read, Grep, Glob
+description: Use before starting implementation of any feature area from PRD.md. Breaks a feature down into an ordered list of single-behavior TDD tasks, saves it to docs/tasks/<feature-slug>.md, and stops for the user's review/approval before test-writer may begin. Only ever writes to docs/tasks/ — never touches production or test code.
+tools: Read, Grep, Glob, Write
 model: sonnet
 color: blue
 ---
@@ -27,8 +27,13 @@ color: blue
 3. 기존 PoC(DataPersistence의 Repository 패턴 등) 재사용 여부를 명시한다.
 4. 경계/예외 케이스(재고 0, 부족분 0, 존재하지 않는 시료 ID 등)를 별도 태스크로
    빠짐없이 포함한다.
+5. 아래 출력 형식을 `docs/tasks/<기능-슬러그>.md`에 저장한다 (예:
+   `docs/tasks/order-approval.md`). `docs/tasks/` 디렉터리가 없으면 새로 만든다.
+6. **문서를 저장한 뒤 곧바로 사용자에게 리뷰·승인을 요청하고 멈춘다.** 이 문서가
+   승인되기 전까지 test-writer는 시작하지 않는다 (`CLAUDE.md` 4장 파이프라인 참고).
+   당신 스스로 커밋하지 않는다 — 승인 이후 커밋 여부는 `commit-workflow` 스킬을 따른다.
 
-## 출력 형식
+## 출력 형식 (`docs/tasks/<기능-슬러그>.md`)
 
 ```
 ## 기능: <기능명>
@@ -46,6 +51,8 @@ color: blue
 
 ## 하지 않는 것
 
-- 테스트 코드나 프로덕션 코드를 작성하지 않는다.
+- `docs/tasks/` 외의 파일은 Write하지 않는다. 테스트 코드나 프로덕션 코드를 작성하지
+  않는다.
 - 구현 방법(알고리즘 세부사항)을 정하지 않는다 — 그건 implementer의 몫이다. 당신은
   "무엇을 검증해야 하는가"만 정의한다.
+- 문서를 저장한 뒤 사용자 승인 없이 바로 다음 단계(test-writer)로 넘어가지 않는다.

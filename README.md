@@ -33,7 +33,10 @@ SampleOrderSystem/
 이 프로젝트는 Claude Code 서브에이전트 + 스킬로 TDD 개발 파이프라인을 구성한다.
 
 ```
-spec-writer          PRD.md 기능 → 단일 행동 단위 TDD 태스크 목록
+spec-writer          PRD.md 기능 → 단일 행동 단위 TDD 태스크 목록을
+                       docs/tasks/<기능-슬러그>.md 로 저장
+   ↓
+사용자 리뷰/승인       ← 승인 전에는 test-writer가 시작하지 않음
    ↓
 test-writer (RED)     테스트 1개 + 트리비얼 스텁 작성, GTest FAILED 확인
    ↓

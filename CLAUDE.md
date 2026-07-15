@@ -24,6 +24,9 @@
 SampleOrderSystem/
 ├── PRD.md
 ├── CLAUDE.md
+├── README.md
+├── docs/
+│   └── tasks/                 # spec-writer가 작성한 기능별 TDD 태스크 목록 (사용자 승인 후 진행)
 ├── SampleOrderSystem.slnx
 ├── SampleOrderSystem/          # 메인 애플리케이션 프로젝트 (MVC)
 │   ├── Model/
@@ -67,7 +70,10 @@ vstest  : "C:\Program Files\Microsoft Visual Studio\18\Community\Common7\IDE\Com
 ### 파이프라인 (`.claude/agents/`)
 
 ```
-spec-writer          PRD.md 기능 → 단일 행동 단위 TDD 태스크 목록
+spec-writer           PRD.md 기능 → 단일 행동 단위 TDD 태스크 목록을
+                       docs/tasks/<기능-슬러그>.md 로 저장
+   ↓
+사용자 리뷰/승인       ← 이 문서를 승인하기 전에는 test-writer가 시작하지 않는다
    ↓
 test-writer (RED)     테스트 1개 + 트리비얼 스텁 작성, GTest FAILED 확인
    ↓
@@ -81,6 +87,9 @@ cpp-code-reviewer      위 리포트 + Clean Code 관점 리뷰 → 필요시 te
 사용자 리뷰/승인 → 커밋
 ```
 
+- spec-writer의 태스크 목록은 **문서로 남기고 사용자 승인을 받는 것 자체가 하나의
+  게이트**다 (6-1장의 "애매한 판단 확인"과 별개로, 태스크 목록 자체는 항상 승인을
+  거친다). 승인되지 않은 태스크 목록으로 test-writer를 진행시키지 않는다.
 - `requirements-auditor`와 `cpp-code-reviewer`는 모두 **읽기 전용**이다. 코드를 직접
   고치지 않고, 실행은 항상 test-writer/implementer가 한다.
 
