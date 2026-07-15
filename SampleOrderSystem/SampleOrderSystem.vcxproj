@@ -160,6 +160,9 @@
     <ClInclude Include="Order\OrderModel.h" />
     <ClInclude Include="Order\OrderView.h" />
     <ClInclude Include="Order\OrderController.h" />
+    <ClInclude Include="Monitoring\MonitorModel.h" />
+    <ClInclude Include="Monitoring\MonitorView.h" />
+    <ClInclude Include="Monitoring\MonitorController.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Core\Router.cpp" />
@@ -174,6 +177,9 @@
     <ClCompile Include="Order\OrderModel.cpp" />
     <ClCompile Include="Order\OrderView.cpp" />
     <ClCompile Include="Order\OrderController.cpp" />
+    <ClCompile Include="Monitoring\MonitorModel.cpp" />
+    <ClCompile Include="Monitoring\MonitorView.cpp" />
+    <ClCompile Include="Monitoring\MonitorController.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="data\samples.json" />
